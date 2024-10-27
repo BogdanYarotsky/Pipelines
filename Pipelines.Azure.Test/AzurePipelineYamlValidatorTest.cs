@@ -41,7 +41,7 @@ public class AzurePipelineYamlValidatorTest
         - script: dotnet build
         """;
         
-        var config = AzureDevOpsPipelineConfiguration.Default with
+        var config = AzurePipelineConfiguration.Default with
         {
             DisableImpliedYamlCiTrigger = true
         };
@@ -52,8 +52,8 @@ public class AzurePipelineYamlValidatorTest
     }
 
     private static List<AzurePipelineYamlError> FindErrorsWithDefaultDevOpsConfiguration(string yaml) 
-        => FindErrors(yaml, AzureDevOpsPipelineConfiguration.Default);
+        => FindErrors(yaml, AzurePipelineConfiguration.Default);
     
-    private static List<AzurePipelineYamlError> FindErrors(string yaml, AzureDevOpsPipelineConfiguration config)
+    private static List<AzurePipelineYamlError> FindErrors(string yaml, AzurePipelineConfiguration config)
         => AzurePipelineYamlValidator.FindErrors(yaml, config).ToList();
 }

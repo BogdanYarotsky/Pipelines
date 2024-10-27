@@ -6,4 +6,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+        <!-- make sure that reference is not leaking to end-users -->
+      <PackageReference Include="YamlDotNet" Version="16.1.3" />
+    </ItemGroup>
+
 </Project>
