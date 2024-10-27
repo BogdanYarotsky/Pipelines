@@ -4,21 +4,55 @@ namespace Pipelines.Azure.Test;
 public class AzurePipelineYmlValidatorTest
 {
     [TestMethod]
-    public void InvalidAzurePipelineDefinitionThrowsError()
+    public void ValidSimpleYmlProducesNoErrors()
     {
-        const string invalidYml = "Hello world!!!";
-        var errors = AzurePipelineYmlValidator.FindErrors(invalidYml).ToList();
-        Assert.AreNotEqual(0, errors.Count);
+        const string validYml = """
+        trigger:
+        - main
+        
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+        - script: dotnet build
+        """;
+        var errors = FindErrorsWithDefaultDevOpsConfiguration(validYml);
+        Assert.AreEqual(0, errors.Count);
     }
+
+    private static List<AzurePipelineYmlError> FindErrorsWithDefaultDevOpsConfiguration(string yaml) 
+        => AzurePipelineYmlValidator.FindErrors(yaml, AzureDevOpsPipelineConfiguration.Default).ToList();
 }
 
+
+public class AzureDevOpsPipelineConfiguration
+{
+    private AzureDevOpsPipelineConfiguration()
+    {
+    }
+
+    public static AzureDevOpsPipelineConfiguration Default = new AzureDevOpsPipelineConfiguration();
+}
 
 public static class AzurePipelineYmlValidator
 {
-    public static IEnumerable<AzurePipelineYmlError> FindErrors(string yaml)
+    public static IEnumerable<AzurePipelineYmlError> FindErrors(string yaml, AzureDevOpsPipelineConfiguration configuration)
     {
-        yield return new AzurePipelineYmlError();
+        if (string.IsNullOrWhiteSpace(yaml))
+        {
+            yield return AzurePipelineYmlError.NoYaml();
+            yield break;
+        }
+        
+        
     }
+
 }
 
-public record AzurePipelineYmlError();
+public record AzurePipelineYmlError(string Message)
+{
+    // todo - simple hierarchy?
+    public static AzurePipelineYmlError NoYaml() => new AzurePipelineYmlError("empty");
+
+
+};
