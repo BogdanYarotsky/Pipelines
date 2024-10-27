@@ -1,3 +1,5 @@
+using Pipelines.Azure.Errors;
+
 namespace Pipelines.Azure.Test;
 
 [TestClass]
@@ -11,7 +13,7 @@ public class AzurePipelineYamlValidatorTest
     {
         var errors = FindErrorsWithDefaultDevOpsConfiguration(yaml);
         Assert.AreEqual(1, errors.Count);
-        Assert.IsInstanceOfType<AzurePipelineNoYaml>(errors.Single());
+        Assert.IsInstanceOfType<EmptyYaml>(errors.Single());
     }
     
     [TestMethod]
@@ -32,12 +34,12 @@ public class AzurePipelineYamlValidatorTest
     public void YamlWithNoTriggerSectionAndDisableImpliedYamlCiTrigger1Error()
     {
         const string yaml = """
-                                pool:
-                                  vmImage: 'ubuntu-latest'
+        pool:
+          vmImage: 'ubuntu-latest'
 
-                                steps:
-                                - script: dotnet build
-                                """;
+        steps:
+        - script: dotnet build
+        """;
         
         var config = AzureDevOpsPipelineConfiguration.Default with
         {
@@ -46,7 +48,7 @@ public class AzurePipelineYamlValidatorTest
         
         var errors = FindErrors(yaml, config);
         Assert.AreEqual(1, errors.Count);
-        Assert.IsInstanceOfType<AzurePipelineMissingTriggerSection>(errors.Single());
+        Assert.IsInstanceOfType<MissingTriggerSection>(errors.Single());
     }
 
     private static List<AzurePipelineYamlError> FindErrorsWithDefaultDevOpsConfiguration(string yaml) 
@@ -55,37 +57,3 @@ public class AzurePipelineYamlValidatorTest
     private static List<AzurePipelineYamlError> FindErrors(string yaml, AzureDevOpsPipelineConfiguration config)
         => AzurePipelineYamlValidator.FindErrors(yaml, config).ToList();
 }
-
-
-public record AzureDevOpsPipelineConfiguration
-{
-    public bool DisableImpliedYamlCiTrigger { get; init; }
-    private AzureDevOpsPipelineConfiguration() { }
-
-    public static readonly AzureDevOpsPipelineConfiguration Default = new();
-}
-
-public static class AzurePipelineYamlValidator
-{
-    public static IEnumerable<AzurePipelineYamlError> FindErrors(
-        string yaml, AzureDevOpsPipelineConfiguration configuration)
-    {
-        if (string.IsNullOrWhiteSpace(yaml))
-        {
-            yield return new AzurePipelineNoYaml();
-            yield break;
-        }
-        
-        // todo - get first section
-        
-    }
-
-}
-
-public record AzurePipelineYamlError(string Message);
-
-public record AzurePipelineNoYaml() : AzurePipelineYamlError(
-    "There is nothing to validate. Null or empty string was passed to the validator");
-
-public record AzurePipelineMissingTriggerSection() : AzurePipelineYamlError(
-    "If in Azure DevOps it was configured for pipelines to require an explicit trigger defined in yaml...");
